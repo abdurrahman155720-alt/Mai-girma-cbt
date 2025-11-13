@@ -1,0 +1,17 @@
+*{box-sizing:border-box;font-family:Poppins,Arial,sans-serif}
+body{margin:0;background:#f0fdf4;color:#064e3b}
+.site-header{background:linear-gradient(90deg,#16a34a,#22c55e);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:space-between}
+.site-header nav a{color:#fff;margin-left:10px;text-decoration:none;font-weight:500}
+.container{max-width:800px;margin:20px auto;padding:20px;background:#fff;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.1)}
+.hidden{display:none}
+label{display:block;margin:10px 0;font-weight:600}
+input,textarea,select{width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:8px;margin-top:4px}
+button{background:#16a34a;color:white;border:none;padding:8px 14px;border-radius:8px;margin:5px 2px;cursor:pointer}
+button:hover{background:#15803d}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+#q-area{margin:20px 0}
+.card{border:1px solid #d1fae5;padding:10px;border-radius:8px;background:#f0fdf4;margin:5px 0}
+.exam-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.muted{color:#64748b}
+@media(max-width:600px){.row{flex-direction:column}}
+

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Take Exam - CBT Practice</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <h1>Take Practice Exam</h1>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="exam.html">Take Exam</a>
+    <a href="admin.html">Admin</a>
+  </nav>
+</header>
+
+<main class="container">
+  <section id="setup">
+    <label>Your Name <input id="student-name" placeholder="e.g. Abdurrahman Shu’aibu"></label>
+    <label>Number of Questions <input id="num-q" type="number" min="1" value="10"></label>
+    <label>Exam Duration (minutes) <input id="exam-time" type="number" min="1" value="10"></label>
+    <button id="start-btn">Start Exam</button>
+  </section>
+
+  <section id="exam" class="hidden">
+    <div class="exam-top">
+      <p id="timer">Time: 00:00</p>
+      <p id="progress"></p>
+    </div>
+    <div id="q-area"></div>
+    <div class="row">
+      <button id="prev-btn">Previous</button>
+      <button id="next-btn">Next</button>
+      <button id="finish-btn">Finish</button>
+    </div>
+  </section>
+
+  <section id="result" class="hidden">
+    <h2>Result</h2>
+    <p id="score"></p>
+    <button id="retake">Retake</button>
+  </section>
+</main>
+
+<script src="js/app.js"></script>
+</body>
+</html>
