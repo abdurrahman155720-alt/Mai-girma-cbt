@@ -27,57 +27,97 @@ const CBT = (() => {
   return { getAll, add, update, remove, getPass, setPass, exportJSON, importJSON, addAttempt, getAttempts };
 })();
 
-// Helper
 const $ = id => document.getElementById(id);
 
-// ---------------- Admin ----------------
 document.addEventListener('DOMContentLoaded', ()=>{
   const page = location.pathname.split('/').pop();
 
+  // ---------------- Admin Page ----------------
   if(page==='admin.html'){
     const loginSection = $('login-section');
     const panel = $('admin-panel');
-    $('login-btn').onclick = ()=>{
-      if($('admin-pass').value === CBT.getPass()){
-        loginSection.classList.add('hidden');
-        panel.classList.remove('hidden');
-        renderList(); renderAttempts();
-      } else $('login-msg').textContent='Wrong password!';
-    };
-    $('logout').onclick = ()=>{ panel.classList.add('hidden'); loginSection.classList.remove('hidden'); };
+    const qForm = $('q-form');
 
     const renderList = ()=>{
       const list = CBT.getAll();
       $('questions-list').innerHTML = list.map(q=>`
         <div class='card'>
           <b>${q.question}</b><br>
-          A: ${q.options.A} | B: ${q.options.B} | C: ${q.options.C} | D: ${q.options.D}
+          A: ${q.options.A}<br>
+          B: ${q.options.B}<br>
+          C: ${q.options.C}<br>
+          D: ${q.options.D}<br>
+          <small>Answer: ${q.answer}</small>
         </div>`).join('') || '<em>No questions yet.</em>';
     };
-    $('export-json').onclick = ()=>{
-      const blob = new Blob([CBT.exportJSON()],{type:'application/json'});
-      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='questions.json'; a.click();
-    };
-    $('import-file').onchange = e=>{
-      const f = e.target.files[0]; if(!f)return;
-      const r = new FileReader(); r.onload=()=>{ CBT.importJSON(r.result); renderList(); alert('Imported'); }; r.readAsText(f);
-    };
-    $('save-pass').onclick = ()=>{ CBT.setPass($('new-pass').value); alert('Password changed!'); };
 
-    $('export-attempts').onclick = ()=>{
-      const attempts = CBT.getAttempts();
-      let csv = 'Name,Score,Date\\n';
-      attempts.forEach(a=> csv+=`${a.name},${a.score},${a.date}\\n`);
-      const blob=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a');
-      a.href=URL.createObjectURL(blob); a.download='attempts.csv'; a.click();
-    };
     const renderAttempts = ()=>{
       const arr = CBT.getAttempts();
       $('attempts-list').innerHTML = arr.map(a=>`<div class='card'><b>${a.name}</b> scored ${a.score}% on ${a.date}</div>`).join('') || '<em>No attempts yet.</em>';
     };
+
+    $('login-btn').onclick = ()=>{
+      if($('admin-pass').value === CBT.getPass()){
+        loginSection.classList.add('hidden');
+        panel.classList.remove('hidden');
+        renderList();
+        renderAttempts();
+      } else $('login-msg').textContent='❌ Wrong password!';
+    };
+
+    $('logout').onclick = ()=>{
+      panel.classList.add('hidden');
+      loginSection.classList.remove('hidden');
+    };
+
+    // ✅ FIX: prevent form reload
+    qForm.onsubmit = (e)=>{
+      e.preventDefault();
+      const q = {
+        question: $('q-text').value.trim(),
+        options: {
+          A: $('opt-a').value.trim(),
+          B: $('opt-b').value.trim(),
+          C: $('opt-c').value.trim(),
+          D: $('opt-d').value.trim()
+        },
+        answer: $('q-correct').value
+      };
+      CBT.add(q);
+      qForm.reset();
+      renderList();
+      alert('✅ Question saved successfully!');
+    };
+
+    $('clear-form').onclick = ()=>qForm.reset();
+
+    $('export-json').onclick = ()=>{
+      const blob = new Blob([CBT.exportJSON()],{type:'application/json'});
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='questions.json'; a.click();
+    };
+
+    $('import-file').onchange = e=>{
+      const f = e.target.files[0]; if(!f)return;
+      const r = new FileReader();
+      r.onload=()=>{ if(CBT.importJSON(r.result)) { renderList(); alert('✅ Imported successfully!'); } else alert('❌ Invalid file'); };
+      r.readAsText(f);
+    };
+
+    $('save-pass').onclick = ()=>{ CBT.setPass($('new-pass').value); alert('Password changed!'); };
+
+    $('export-attempts').onclick = ()=>{
+      const attempts = CBT.getAttempts();
+      let csv = 'Name,Score,Date\n';
+      attempts.forEach(a=> csv+=`${a.name},${a.score},${a.date}\n`);
+      const blob=new Blob([csv],{type:'text/csv'});
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download='attempts.csv';
+      a.click();
+    };
   }
 
-  // ---------------- Exam ----------------
+  // ---------------- Exam Page ----------------
   if(page==='exam.html'){
     const setup=$('setup'), exam=$('exam'), result=$('result');
     const nameInput=$('student-name'), numQ=$('num-q'), timeInput=$('exam-time');
@@ -88,7 +128,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
     let pool=[],idx=0,answers={},timer,remaining=0;
 
     $('start-btn').onclick=()=>{
-      const all=CBT.getAll(); if(all.length===0)return alert('No questions yet.');
+      const all=CBT.getAll();
+      if(all.length===0) return alert('⚠️ No questions available!');
       const count=Math.min(Number(numQ.value),all.length);
       pool=all.slice(0,count);
       remaining=Number(timeInput.value)*60;
@@ -96,6 +137,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
       setup.classList.add('hidden'); exam.classList.remove('hidden');
       renderQ(); updateProgress(); startTimer();
     };
+
     function startTimer(){
       timer=setInterval(()=>{
         remaining--;
@@ -104,18 +146,22 @@ document.addEventListener('DOMContentLoaded', ()=>{
         if(remaining<=0){ clearInterval(timer); finishExam(); }
       },1000);
     }
+
     function renderQ(){
       const q=pool[idx];
       qArea.innerHTML=`<h3>${idx+1}. ${q.question}</h3>`+
         ['A','B','C','D'].map(opt=>`<label><input type='radio' name='opt' value='${opt}' ${answers[idx]===opt?'checked':''}> ${opt}: ${q.options[opt]}</label>`).join('');
       qArea.querySelectorAll('input').forEach(i=>i.onchange=e=>answers[idx]=e.target.value);
     }
+
     function updateProgress(){
       progress.textContent=`Question ${idx+1} of ${pool.length}`;
     }
+
     prev.onclick=()=>{ if(idx>0){idx--; renderQ(); updateProgress();}};
     next.onclick=()=>{ if(idx<pool.length-1){idx++; renderQ(); updateProgress();}};
     finish.onclick=finishExam;
+
     function finishExam(){
       clearInterval(timer);
       let correct=0;
@@ -126,7 +172,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
       exam.classList.add('hidden'); result.classList.remove('hidden');
       scoreP.textContent=`${name}, you scored ${score}%`;
     }
+
     retake.onclick=()=>{ result.classList.add('hidden'); setup.classList.remove('hidden'); };
   }
 });
-
